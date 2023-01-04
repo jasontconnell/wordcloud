@@ -41,29 +41,24 @@ func main() {
 func getWordCloud(dir string, filter string) []entry {
 	letterreg := regexp.MustCompile("[a-z]+")
 	notletterreg := regexp.MustCompile("[^a-zA-Z0-9_<>]+")
-	m := make(map[string]entry)
+	m := make(map[string]*entry)
 	files := getFiles(dir, filter)
 	for _, f := range files {
-		for _, line := range strings.Split(f.contents, "\n") {
-			s := notletterreg.ReplaceAllString(line, " ")
-			for _, w := range strings.Fields(s) {
-				if letterreg.MatchString(w) {
-					if ent, ok := m[w]; ok {
-						ent.count++
-						ent.files = append(ent.files, f.filename)
-						m[w] = ent
-					} else {
-						ent := entry{word: w, count: 1, files: []string{f.filename}}
-						m[w] = ent
-					}
+		s := notletterreg.ReplaceAllString(f.contents, " ")
+		for _, w := range strings.Fields(s) {
+			if letterreg.MatchString(w) {
+				if _, ok := m[w]; !ok {
+					m[w] = &entry{word: w}
 				}
+				m[w].files = append(m[w].files, f.filename)
+				m[w].count++
 			}
 		}
 	}
 
 	list := []entry{}
 	for _, v := range m {
-		list = append(list, v)
+		list = append(list, *v)
 	}
 
 	sort.Slice(list, func(i, j int) bool {
@@ -81,7 +76,7 @@ func getFiles(dir string, filter string) []file {
 
 		_, fn := filepath.Split(path)
 		if strings.Contains(fn, filter) || filter == "*" {
-			f := file{filename: path}
+			f := file{filename: fn}
 			b, err := os.ReadFile(path)
 			if err != nil {
 				log.Println("can't read file", path, err)

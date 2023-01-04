@@ -39,20 +39,17 @@ func main() {
 }
 
 func getWordCloud(dir string, filter string) []entry {
-	letterreg := regexp.MustCompile("[a-z]+")
 	notletterreg := regexp.MustCompile("[^a-zA-Z0-9_<>]+")
 	m := make(map[string]*entry)
 	files := getFiles(dir, filter)
 	for _, f := range files {
 		s := notletterreg.ReplaceAllString(f.contents, " ")
 		for _, w := range strings.Fields(s) {
-			if letterreg.MatchString(w) {
-				if _, ok := m[w]; !ok {
-					m[w] = &entry{word: w}
-				}
-				m[w].files = append(m[w].files, f.filename)
-				m[w].count++
+			if _, ok := m[w]; !ok {
+				m[w] = &entry{word: w}
 			}
+			m[w].files = append(m[w].files, f.filename)
+			m[w].count++
 		}
 	}
 

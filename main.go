@@ -29,14 +29,7 @@ func main() {
 	filter := flag.String("filter", "*", "filename filter")
 	flag.Parse()
 
-	m := getWordCloud(*dir, *filter)
-	list := []entry{}
-	for _, v := range m {
-		list = append(list, v)
-	}
-	sort.Slice(list, func(i, j int) bool {
-		return list[i].count < list[j].count
-	})
+	list := getWordCloud(*dir, *filter)
 
 	for _, item := range list {
 		fmt.Println(item.word, item.count)
@@ -45,7 +38,7 @@ func main() {
 	fmt.Println("Time", time.Since(start))
 }
 
-func getWordCloud(dir string, filter string) map[string]entry {
+func getWordCloud(dir string, filter string) []entry {
 	letterreg := regexp.MustCompile("[a-z]+")
 	notletterreg := regexp.MustCompile("[^a-zA-Z0-9_<>]+")
 	m := make(map[string]entry)
@@ -67,7 +60,16 @@ func getWordCloud(dir string, filter string) map[string]entry {
 			}
 		}
 	}
-	return m
+
+	list := []entry{}
+	for _, v := range m {
+		list = append(list, v)
+	}
+
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].count < list[j].count
+	})
+	return list
 }
 
 func getFiles(dir string, filter string) []file {

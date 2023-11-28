@@ -27,29 +27,41 @@ func main() {
 	start := time.Now()
 	dir := flag.String("dir", ".", "directory")
 	filter := flag.String("filter", "*", "filename filter")
+	byword := flag.String("word", "", "get word occurrences instead")
 	flag.Parse()
 
-	list := getWordCloud(*dir, *filter)
+	list := getWordCloud(*dir, *filter, *byword)
+	sum := 0
 
 	for _, item := range list {
 		fmt.Println(item.word, item.count)
+		sum += item.count
 	}
 
-	fmt.Println("Time", time.Since(start))
+	fmt.Println("total", sum)
+
+	fmt.Println("finished", time.Since(start))
 }
 
-func getWordCloud(dir string, filter string) []entry {
+func getWordCloud(dir string, filter, word string) []entry {
 	notletterreg := regexp.MustCompile("[^a-zA-Z0-9_<>]+")
 	m := make(map[string]*entry)
 	files := getFiles(dir, filter)
 	for _, f := range files {
 		s := notletterreg.ReplaceAllString(f.contents, " ")
 		for _, w := range strings.Fields(s) {
-			if _, ok := m[w]; !ok {
-				m[w] = &entry{word: w}
+			if word != "" && w != word {
+				continue
 			}
-			m[w].files = append(m[w].files, f.filename)
-			m[w].count++
+			key := w
+			if word != "" {
+				key = f.filename
+			}
+			if _, ok := m[key]; !ok {
+				m[key] = &entry{word: key}
+			}
+			m[key].files = append(m[key].files, f.filename)
+			m[key].count++
 		}
 	}
 
